@@ -1,4 +1,4 @@
-#include "raylib.h"
+#include <raylib.h>
 
 #include <math.h>
 
@@ -9,7 +9,7 @@ int main()
     const int screenWidth = 800;
     const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "raylib [models] example - waving cubes");
+    InitWindow(screenWidth, screenHeight, "Dnkvw Raylib Example");
 
     // Initialize the camera
     Camera3D camera = { 0 };
