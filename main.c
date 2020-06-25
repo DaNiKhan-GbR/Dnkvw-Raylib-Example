@@ -1,46 +1,64 @@
+/*******************************************************************************************
+*
+*   Based on raylib [core] example - 3d camera first person
+*
+*   This example has been created using raylib 1.3 (www.raylib.com)
+*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
+*
+*   Copyright (c) 2015 Ramon Santamaria (@raysan5)
+*
+********************************************************************************************/
+
 #include <raylib.h>
+#include <dnkvw/dnkvw.h>
 
-#include <math.h>
+#define MAX_COLUMNS 20
 
-int main()
+int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
     const int screenWidth = 800;
     const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "Dnkvw Raylib Example");
+    InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera first person");
+    IDnkvwHandle dnkvw = dnkvw_createContext();
+    dnkvw_debugCameraInput(dnkvw, 0);
+    dnkvw_freeContext(&dnkvw);
 
-    // Initialize the camera
-    Camera3D camera = { 0 };
-    camera.position = (Vector3){ 30.0f, 20.0f, 30.0f };
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };
+    // Define the camera to look into our 3d world (position, target, up vector)
+    Camera camera = { 0 };
+    camera.position = (Vector3){ 4.0f, 2.0f, 4.0f };
+    camera.target = (Vector3){ 0.0f, 1.8f, 0.0f };
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
-    camera.fovy = 70.0f;
+    camera.fovy = 60.0f;
     camera.type = CAMERA_PERSPECTIVE;
 
-    // Specify the amount of blocks in each direction
-    const int numBlocks = 15;
+    // Generates some random columns
+    float heights[MAX_COLUMNS] = { 0.0f };
+    Vector3 positions[MAX_COLUMNS] = { 0 };
+    Color colors[MAX_COLUMNS] = { 0 };
 
-    SetTargetFPS(60);
+    for (int i = 0; i < MAX_COLUMNS; i++)
+    {
+        heights[i] = (float)GetRandomValue(1, 12);
+        positions[i] = (Vector3){ GetRandomValue(-15, 15), heights[i]/2, GetRandomValue(-15, 15) };
+        colors[i] = (Color){ GetRandomValue(20, 255), GetRandomValue(10, 55), 30, 255 };
+    }
+
+    SetCameraMode(camera, CAMERA_FIRST_PERSON); // Set a first person camera mode
+
+    SetTargetFPS(60);                           // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
+    while (!WindowShouldClose())                // Detect window close button or ESC key
     {
         // Update
         //----------------------------------------------------------------------------------
-        double time = GetTime();
-
-        // Calculate time scale for cube position and size
-        float scale = (2.0f + (float)sin(time))*0.7f;
-
-        // Move camera around the scene
-        double cameraTime = time*0.3;
-        camera.position.x = (float)cos(cameraTime)*40.0f;
-        camera.position.z = (float)sin(cameraTime)*40.0f;
+        UpdateCamera(&camera);                  // Update camera
         //----------------------------------------------------------------------------------
-        
+
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
@@ -49,42 +67,26 @@ int main()
 
             BeginMode3D(camera);
 
-                DrawGrid(10, 5.0f);
+                DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector2){ 32.0f, 32.0f }, LIGHTGRAY); // Draw ground
+                DrawCube((Vector3){ -16.0f, 2.5f, 0.0f }, 1.0f, 5.0f, 32.0f, BLUE);     // Draw a blue wall
+                DrawCube((Vector3){ 16.0f, 2.5f, 0.0f }, 1.0f, 5.0f, 32.0f, LIME);      // Draw a green wall
+                DrawCube((Vector3){ 0.0f, 2.5f, 16.0f }, 32.0f, 5.0f, 1.0f, GOLD);      // Draw a yellow wall
 
-                for (int x = 0; x < numBlocks; x++) 
+                // Draw some cubes around
+                for (int i = 0; i < MAX_COLUMNS; i++)
                 {
-                    for (int y = 0; y < numBlocks; y++) 
-                    {
-                        for (int z = 0; z < numBlocks; z++) 
-                        {
-                            // Scale of the blocks depends on x/y/z positions
-                            float blockScale = (x + y + z)/30.0f;
-
-                            // Scatter makes the waving effect by adding blockScale over time
-                            float scatter = sinf(blockScale*20.0f + (float)(time*4.0f));
-
-                            // Calculate the cube position
-                            Vector3 cubePos = {
-                                (float)(x - numBlocks/2)*(scale*3.0f) + scatter,
-                                (float)(y - numBlocks/2)*(scale*2.0f) + scatter,
-                                (float)(z - numBlocks/2)*(scale*3.0f) + scatter
-                            };
-
-                            // Pick a color with a hue depending on cube position for the rainbow color effect
-                            Color cubeColor = ColorFromHSV((Vector3){ (float)(((x + y + z)*18)%360), 0.75f, 0.9f });
-
-                            // Calculate cube size
-                            float cubeSize = (2.4f - scale)*blockScale;
-
-                            // And finally, draw the cube!
-                            DrawCube(cubePos, cubeSize, cubeSize, cubeSize, cubeColor);
-                        }
-                    }
+                    DrawCube(positions[i], 2.0f, heights[i], 2.0f, colors[i]);
+                    DrawCubeWires(positions[i], 2.0f, heights[i], 2.0f, MAROON);
                 }
-                
+
             EndMode3D();
-            
-            DrawFPS(10, 10);
+
+            DrawRectangle( 10, 10, 220, 70, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLines( 10, 10, 220, 70, BLUE);
+
+            DrawText("First person camera default controls:", 20, 20, 10, BLACK);
+            DrawText("- Move with keys: W, A, S, D", 40, 40, 10, DARKGRAY);
+            DrawText("- Mouse move to look around", 40, 60, 10, DARKGRAY);
 
         EndDrawing();
         //----------------------------------------------------------------------------------
@@ -97,4 +99,3 @@ int main()
 
     return 0;
 }
-
