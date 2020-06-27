@@ -9,8 +9,10 @@
 *
 ********************************************************************************************/
 
+#include <stdio.h>
 #include <raylib.h>
 #include <dnkvw/dnkvw.h>
+#include "raymath.h"
 
 #define MAX_COLUMNS 20
 
@@ -21,10 +23,11 @@ int main(void)
     const int screenWidth = 800;
     const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d camera first person");
+    InitWindow(screenWidth, screenHeight, "DaNiKhan V-Window Raylib example");
     IDnkvwHandle dnkvw = dnkvw_createContext();
-    dnkvw_debugCameraInput(dnkvw, 0);
-    dnkvw_freeContext(&dnkvw);
+    dnkvw_selectDnnTracker(dnkvw);
+    dnkvw_configureFrustum(dnkvw, screenWidth / (float)screenHeight, 1.0f);
+    dnkvw_startTracking(dnkvw, 0); // 0 is the camera ID
 
     // Define the camera to look into our 3d world (position, target, up vector)
     Camera camera = { 0 };
@@ -47,7 +50,7 @@ int main(void)
     }
 
     SetCameraMode(camera, CAMERA_FIRST_PERSON); // Set a first person camera mode
-
+    
     SetTargetFPS(60);                           // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
@@ -56,7 +59,21 @@ int main(void)
     {
         // Update
         //----------------------------------------------------------------------------------
+        Vector3 eyeOffset;
+        float dnkvwFps, left, right, top, bottom;
+        char fpsText[50];
+        dnkvw_loadEyeOffset(dnkvw, &eyeOffset.x, &eyeOffset.y, &eyeOffset.z);
+        dnkvw_loadFrustum(dnkvw, &left, &right, &top, &bottom);
+        dnkvw_loadFps(dnkvw, &dnkvwFps);
+
+        snprintf(fpsText, 50, "FPS: %2d Tracking FPS: %02.2f", GetFPS(), dnkvwFps);
+        
         UpdateCamera(&camera);                  // Update camera
+
+        if (IsKeyPressed(KEY_SPACE))
+        {
+            dnkvw_calibrate(dnkvw);
+        }
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -66,6 +83,11 @@ int main(void)
             ClearBackground(RAYWHITE);
 
             BeginMode3D(camera);
+                
+                Vector3 oldPos = camera.position;
+                camera.position = Vector3Add(oldPos, eyeOffset);
+                Matrix projection = MatrixFrustum(left, right, bottom, top, 1.0f, 100.0f);
+                SetMatrixProjection(projection); 
 
                 DrawPlane((Vector3){ 0.0f, 0.0f, 0.0f }, (Vector2){ 32.0f, 32.0f }, LIGHTGRAY); // Draw ground
                 DrawCube((Vector3){ -16.0f, 2.5f, 0.0f }, 1.0f, 5.0f, 32.0f, BLUE);     // Draw a blue wall
@@ -78,15 +100,19 @@ int main(void)
                     DrawCube(positions[i], 2.0f, heights[i], 2.0f, colors[i]);
                     DrawCubeWires(positions[i], 2.0f, heights[i], 2.0f, MAROON);
                 }
+                
+                // Reset position
+                camera.position = oldPos;
 
             EndMode3D();
 
-            DrawRectangle( 10, 10, 220, 70, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 220, 70, BLUE);
+            DrawRectangle( 10, 10, 220, 90, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLines( 10, 10, 220, 90, BLUE);
 
             DrawText("First person camera default controls:", 20, 20, 10, BLACK);
             DrawText("- Move with keys: W, A, S, D", 40, 40, 10, DARKGRAY);
             DrawText("- Mouse move to look around", 40, 60, 10, DARKGRAY);
+            DrawText(fpsText, 40, 80, 10, DARKGRAY);
 
         EndDrawing();
         //----------------------------------------------------------------------------------
@@ -94,6 +120,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
+    dnkvw_stopTracking(dnkvw);
+    dnkvw_freeContext(&dnkvw);
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
