@@ -31,4 +31,3 @@ find_package(dnkvw 1.0.0 REQUIRED)
 add_executable(${PROJECT_NAME} main.c)
 target_link_libraries(${PROJECT_NAME} raylib)
 target_link_libraries(${PROJECT_NAME} dnkvw)
-
