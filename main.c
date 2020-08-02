@@ -33,8 +33,9 @@
 
 /*******************************************************************************************
 *
-*   Dnkvw Raylib Minimal Example
-*   Demonstrates the simplest possible use of dnkvw.
+*   Dnkvw Raylib Example
+*   Demonstrates a possible use of dnkvw.
+*   May change in time for more elaborate demonstrations.
 *
 *   Based on raylib [core] example - 3d camera first person
 *   The example was modified to use the DaNiKhan V-Window Library.
@@ -120,9 +121,6 @@ int main(void)
         positions[i] = (Vector3){ GetRandomValue(-15, 15), heights[i]/2, GetRandomValue(-15, 15) };
         colors[i] = (Color){ GetRandomValue(20, 255), GetRandomValue(10, 55), 30, 255 };
     }
-
-    // Set a first person camera mode
-    SetCameraMode(camera, CAMERA_FIRST_PERSON);
     
     // Set our game to run at 60 frames-per-second
     SetTargetFPS(60);
@@ -216,15 +214,13 @@ int main(void)
             
             // GUI
             //----------------------------------------------------------------------------------
-            DrawRectangle( 10, 10, 220, 130, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 220, 130, BLUE);
+            DrawRectangle( 10, 10, 220, 90, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLines( 10, 10, 220, 90, BLUE);
 
             DrawText("Controls:", 20, 20, 10, BLACK);
-            DrawText("- Move with keys: W, A, S, D", 40, 40, 10, DARKGRAY);
-            DrawText("- Mouse move to look around", 40, 60, 10, DARKGRAY);
-            DrawText("- SPACE to calibrate tracking", 40, 80, 10, DARKGRAY);
-            DrawText("- F2 for fullscreen", 40, 100, 10, DARKGRAY);
-            DrawText(fpsText, 40, 120, 10, DARKGRAY);
+            DrawText("- SPACE to calibrate tracking", 40, 40, 10, DARKGRAY);
+            DrawText("- F2 for fullscreen", 40, 60, 10, DARKGRAY);
+            DrawText(fpsText, 40, 80, 10, DARKGRAY);
 
         EndDrawing();
     }
